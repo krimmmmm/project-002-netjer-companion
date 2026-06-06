@@ -6,35 +6,38 @@ import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import * as THREE from "three";
 
 function NetjerAura() {
-  const auraRef = useRef();
+  const auraRef = useRef(null);
 
   useFrame((state) => {
-    const t = state.clock.getElapsedTime();
+    const time = state.clock.getElapsedTime();
 
     if (!auraRef.current) return;
 
-    auraRef.current.rotation.z = t * 0.6;
+    auraRef.current.rotation.z = time * 0.7;
+    auraRef.current.scale.setScalar(1 + Math.sin(time * 2) * 0.05);
   });
 
   return (
-    <group ref={auraRef} position={[1.2, -2.1, -0.2]}>
+    <group ref={auraRef} position={[1.15, -0.65, -0.25]}>
       <mesh>
-        <torusGeometry args={[1.2, 0.02, 16, 100]} />
-
+        <torusGeometry args={[0.52, 0.012, 16, 128]} />
         <meshStandardMaterial
           color="#00ffff"
           emissive="#00ffff"
-          emissiveIntensity={2}
+          emissiveIntensity={1.8}
+          transparent
+          opacity={0.78}
         />
       </mesh>
 
       <mesh rotation={[0, 0, Math.PI / 4]}>
-        <torusGeometry args={[1.45, 0.015, 16, 100]} />
-
+        <torusGeometry args={[0.66, 0.009, 16, 128]} />
         <meshStandardMaterial
           color="#ffd166"
           emissive="#ffb703"
-          emissiveIntensity={1}
+          emissiveIntensity={1.2}
+          transparent
+          opacity={0.55}
         />
       </mesh>
     </group>
@@ -43,104 +46,114 @@ function NetjerAura() {
 
 function AvatarFBX() {
   const model = useLoader(FBXLoader, "/models/avatar.fbx");
+  const avatarRef = useRef(null);
 
-  const ref = useRef();
+  const clonedModel = useMemo(() => {
+    const clone = model.clone(true);
 
-  const cloned = useMemo(() => {
-    const c = model.clone(true);
-
-    c.traverse((child) => {
+    clone.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true;
         child.receiveShadow = true;
 
         if (child.material) {
           child.material = child.material.clone();
-
-          child.material.emissive = new THREE.Color("#003344");
-
-          child.material.emissiveIntensity = 0.15;
+          child.material.emissive = new THREE.Color("#002a33");
+          child.material.emissiveIntensity = 0.12;
+          child.material.roughness = 0.35;
+          child.material.metalness = 0.08;
         }
       }
     });
 
-    return c;
+    return clone;
   }, [model]);
 
   useFrame((state) => {
-    const t = state.clock.getElapsedTime();
+    const time = state.clock.getElapsedTime();
 
-    if (!ref.current) return;
+    if (!avatarRef.current) return;
 
-    ref.current.rotation.y = Math.sin(t) * 0.25;
-
-    ref.current.position.y = -2.1 + Math.sin(t * 2) * 0.05;
+    avatarRef.current.position.y = -1.05 + Math.sin(time * 1.6) * 0.04;
+    avatarRef.current.rotation.y = Math.sin(time * 0.8) * 0.22;
   });
 
   return (
     <group
-      ref={ref}
-      position={[1.2, -2.1, 0]}
-      scale={[0.0015, 0.0015, 0.0015]}
+      ref={avatarRef}
+      position={[1.15, -1.05, 0]}
+      rotation={[0, Math.PI, 0]}
+      scale={[0.00045, 0.00045, 0.00045]}
     >
-      <primitive object={cloned} />
+      <primitive object={clonedModel} />
+      <pointLight position={[0, 120, 80]} intensity={2.5} color="#00eaff" />
     </group>
   );
 }
 
-function Scene() {
+function NetjerScene() {
   return (
     <Canvas
       camera={{
         position: [0, 0, 5],
-        fov: 40
+        fov: 45
       }}
+      gl={{
+        alpha: true,
+        antialias: true
+      }}
+      shadows
     >
-      <ambientLight intensity={1.5} />
-
-      <directionalLight
-        position={[5, 5, 5]}
-        intensity={2}
-      />
-
-      <pointLight
-        position={[0, 2, 2]}
-        intensity={2}
-        color="#00ffff"
-      />
+      <ambientLight intensity={1.35} />
+      <directionalLight position={[3, 5, 6]} intensity={2.4} />
+      <pointLight position={[0, 2, 3]} intensity={2.5} color="#00eaff" />
 
       <Suspense fallback={null}>
         <NetjerAura />
-
         <AvatarFBX />
       </Suspense>
 
       <OrbitControls
         enableZoom={false}
-        enableRotate={false}
         enablePan={false}
+        enableRotate={false}
       />
     </Canvas>
   );
 }
 
 function App() {
-  const videoRef = useRef();
-
+  const videoRef = useRef(null);
   const [started, setStarted] = useState(false);
+  const [message, setMessage] = useState("");
 
   const startCamera = async () => {
     try {
+      setMessage("");
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setMessage("This browser does not support camera access.");
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: {
+          facingMode: "user"
+        },
         audio: false
       });
 
-      videoRef.current.srcObject = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
 
       setStarted(true);
     } catch (err) {
-      alert("Please allow camera permission");
+      console.error(err);
+      setStarted(false);
+      setMessage(
+        "Camera permission is required. Please allow camera access and press START CAMERA again."
+      );
     }
   };
 
@@ -161,57 +174,86 @@ function App() {
       <video
         ref={videoRef}
         autoPlay
-        muted
         playsInline
+        muted
         style={{
           position: "absolute",
+          inset: 0,
           width: "100%",
           height: "100%",
           objectFit: "cover",
-          transform: "scaleX(-1)"
+          transform: "scaleX(-1)",
+          zIndex: 1
         }}
       />
 
       <div
         style={{
           position: "absolute",
-          inset: 0
+          inset: 0,
+          zIndex: 2,
+          pointerEvents: "none"
         }}
       >
-        <Scene />
+        <NetjerScene />
       </div>
 
       <div
         style={{
           position: "absolute",
-          top: 20,
+          top: "18px",
+          left: 0,
           width: "100%",
           textAlign: "center",
           color: "white",
           fontWeight: "bold",
-          letterSpacing: 4,
-          textShadow: "0 0 15px cyan",
-          fontSize: "32px"
+          letterSpacing: "3px",
+          textShadow: "0 0 12px cyan",
+          fontSize: "clamp(18px, 4vw, 30px)",
+          zIndex: 3
         }}
       >
         NETJER FBX COMPANION
       </div>
+
+      {message && (
+        <div
+          style={{
+            position: "absolute",
+            left: "50%",
+            bottom: "108px",
+            transform: "translateX(-50%)",
+            width: "88%",
+            maxWidth: "520px",
+            padding: "12px 14px",
+            borderRadius: "12px",
+            background: "rgba(0,0,0,0.72)",
+            color: "white",
+            textAlign: "center",
+            fontSize: "15px",
+            zIndex: 4
+          }}
+        >
+          {message}
+        </div>
+      )}
 
       {!started && (
         <button
           onClick={startCamera}
           style={{
             position: "absolute",
-            bottom: 40,
+            bottom: "40px",
             left: "50%",
             transform: "translateX(-50%)",
-            padding: "16px 30px",
-            fontSize: "24px",
-            borderRadius: "15px",
+            padding: "14px 24px",
+            fontSize: "20px",
             border: "none",
+            borderRadius: "12px",
             background: "cyan",
             color: "black",
-            fontWeight: "bold"
+            fontWeight: "bold",
+            zIndex: 4
           }}
         >
           START CAMERA
