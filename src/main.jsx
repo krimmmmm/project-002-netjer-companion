@@ -20,7 +20,7 @@ function App() {
 
       setStarted(true)
     } catch (err) {
-      alert('Camera Error')
+      alert('Camera Error: Please allow camera permission')
       console.error(err)
     }
   }
@@ -53,7 +53,7 @@ function App() {
       />
 
       <img
-        src="https://pngimg.com/d/angel_PNG47.png"
+        src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/800px-Cat03.jpg"
         alt="netjer"
         style={{
           position: 'absolute',
@@ -61,10 +61,29 @@ function App() {
           bottom: '10%',
           width: '35vw',
           maxWidth: '260px',
+          borderRadius: '18px',
           animation: 'float 3s ease-in-out infinite',
-          filter: 'drop-shadow(0 0 20px cyan)'
+          filter: 'drop-shadow(0 0 22px cyan)',
+          zIndex: 2
         }}
       />
+
+      <div
+        style={{
+          position: 'absolute',
+          top: '22px',
+          left: 0,
+          width: '100%',
+          textAlign: 'center',
+          color: 'white',
+          fontWeight: 'bold',
+          letterSpacing: '3px',
+          textShadow: '0 0 12px cyan',
+          zIndex: 3
+        }}
+      >
+        NETJER COMPANION
+      </div>
 
       {!started && (
         <button
@@ -80,7 +99,8 @@ function App() {
             borderRadius: '12px',
             background: 'cyan',
             color: 'black',
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            zIndex: 4
           }}
         >
           START CAMERA
@@ -90,11 +110,11 @@ function App() {
       <style>
         {`
           @keyframes float {
-            0%,100%{
+            0%, 100% {
               transform: translateY(0);
             }
 
-            50%{
+            50% {
               transform: translateY(-20px);
             }
           }
