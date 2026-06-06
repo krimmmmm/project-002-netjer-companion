@@ -18,9 +18,9 @@ function NetjerAura() {
   });
 
   return (
-    <group ref={auraRef} position={[1.15, -0.65, -0.25]}>
+    <group ref={auraRef} position={[0.9, -1.05, -0.25]}>
       <mesh>
-        <torusGeometry args={[0.52, 0.012, 16, 128]} />
+        <torusGeometry args={[0.75, 0.015, 16, 128]} />
         <meshStandardMaterial
           color="#00ffff"
           emissive="#00ffff"
@@ -31,7 +31,7 @@ function NetjerAura() {
       </mesh>
 
       <mesh rotation={[0, 0, Math.PI / 4]}>
-        <torusGeometry args={[0.66, 0.009, 16, 128]} />
+        <torusGeometry args={[0.92, 0.011, 16, 128]} />
         <meshStandardMaterial
           color="#ffd166"
           emissive="#ffb703"
@@ -74,16 +74,16 @@ function AvatarFBX() {
 
     if (!avatarRef.current) return;
 
-    avatarRef.current.position.y = -1.05 + Math.sin(time * 1.6) * 0.04;
+    avatarRef.current.position.y = -2.8 + Math.sin(time * 1.6) * 0.04;
     avatarRef.current.rotation.y = Math.sin(time * 0.8) * 0.22;
   });
 
   return (
     <group
       ref={avatarRef}
-      position={[1.15, -1.05, 0]}
-      rotation={[0, Math.PI, 0]}
-      scale={[0.00045, 0.00045, 0.00045]}
+      position={[0.9, -2.8, 0]}
+      rotation={[0, 0, 0]}
+      scale={[0.015, 0.015, 0.015]}
     >
       <primitive object={clonedModel} />
       <pointLight position={[0, 120, 80]} intensity={2.5} color="#00eaff" />
