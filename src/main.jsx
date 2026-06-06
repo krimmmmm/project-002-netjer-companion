@@ -1,79 +1,110 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import ReactDOM from 'react-dom/client'
-import { Canvas, useFrame } from '@react-three/fiber'
-import { OrbitControls, Float } from '@react-three/drei'
+import { Canvas, useFrame, useLoader } from '@react-three/fiber'
+import { OrbitControls } from '@react-three/drei'
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
+import * as THREE from 'three'
 
-function Netjer3D() {
-  const groupRef = useRef(null)
+function NetjerAura() {
+  const auraRef = useRef(null)
 
   useFrame((state) => {
-    if (!groupRef.current) return
-
     const time = state.clock.getElapsedTime()
-    groupRef.current.rotation.y = Math.sin(time * 0.8) * 0.35
-    groupRef.current.position.y = Math.sin(time * 1.5) * 0.18
+    if (!auraRef.current) return
+    auraRef.current.rotation.z = time * 0.7
+    auraRef.current.scale.setScalar(1 + Math.sin(time * 2) * 0.05)
   })
 
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={1.4}>
-      <group ref={groupRef} position={[1.25, -0.35, 0]}>
-        <mesh position={[0, 0.9, 0]}>
-          <sphereGeometry args={[0.34, 48, 48]} />
-          <meshStandardMaterial
-            color="#d9f7ff"
-            emissive="#00eaff"
-            emissiveIntensity={0.35}
-            roughness={0.28}
-            metalness={0.15}
-          />
-        </mesh>
+    <group ref={auraRef} position={[0.95, -0.15, -0.15]}>
+      <mesh>
+        <torusGeometry args={[0.95, 0.018, 16, 128]} />
+        <meshStandardMaterial
+          color="#00ffff"
+          emissive="#00ffff"
+          emissiveIntensity={1.8}
+          transparent
+          opacity={0.75}
+        />
+      </mesh>
+      <mesh rotation={[0, 0, Math.PI / 4]}>
+        <torusGeometry args={[1.12, 0.012, 16, 128]} />
+        <meshStandardMaterial
+          color="#ffd166"
+          emissive="#ffb703"
+          emissiveIntensity={1.2}
+          transparent
+          opacity={0.5}
+        />
+      </mesh>
+    </group>
+  )
+}
 
-        <mesh position={[0, 0.18, 0]}>
-          <capsuleGeometry args={[0.34, 0.85, 8, 32]} />
-          <meshStandardMaterial
-            color="#101827"
-            emissive="#005a76"
-            emissiveIntensity={0.35}
-            roughness={0.32}
-            metalness={0.45}
-          />
-        </mesh>
+function AvatarFBX() {
+  const model = useLoader(FBXLoader, '/models/avatar.fbx')
+  const groupRef = useRef(null)
 
-        <mesh position={[-0.55, 0.28, 0]} rotation={[0, 0, 0.75]}>
-          <capsuleGeometry args={[0.11, 0.75, 8, 24]} />
-          <meshStandardMaterial color="#00cfff" emissive="#00eaff" emissiveIntensity={0.8} />
-        </mesh>
+  const clonedModel = useMemo(() => {
+    const clone = model.clone(true)
 
-        <mesh position={[0.55, 0.28, 0]} rotation={[0, 0, -0.75]}>
-          <capsuleGeometry args={[0.11, 0.75, 8, 24]} />
-          <meshStandardMaterial color="#00cfff" emissive="#00eaff" emissiveIntensity={0.8} />
-        </mesh>
+    clone.traverse((child) => {
+      if (child.isMesh) {
+        child.castShadow = true
+        child.receiveShadow = true
 
-        <mesh position={[0, 0.18, -0.08]} scale={[1.8, 2.2, 0.08]}>
-          <torusGeometry args={[0.48, 0.035, 16, 96]} />
-          <meshStandardMaterial
-            color="#00ffff"
-            emissive="#00ffff"
-            emissiveIntensity={1.6}
-            transparent
-            opacity={0.8}
-          />
-        </mesh>
+        if (child.material) {
+          child.material = child.material.clone()
+          child.material.emissive = new THREE.Color('#003344')
+          child.material.emissiveIntensity = 0.18
+          child.material.roughness = 0.35
+          child.material.metalness = 0.1
+        }
+      }
+    })
 
-        <mesh position={[0, 0.2, -0.16]} scale={[1.3, 1.3, 1.3]}>
-          <torusGeometry args={[0.72, 0.02, 16, 128]} />
-          <meshStandardMaterial
-            color="#ffd166"
-            emissive="#ffb703"
-            emissiveIntensity={1.2}
-            transparent
-            opacity={0.55}
-          />
-        </mesh>
+    return clone
+  }, [model])
 
-        <pointLight position={[0, 1.5, 1]} intensity={3} color="#00eaff" />
-      </group>
-    </Float>
+  useFrame((state) => {
+    const time = state.clock.getElapsedTime()
+    if (!groupRef.current) return
+
+    groupRef.current.position.y = -1.25 + Math.sin(time * 1.6) * 0.08
+    groupRef.current.rotation.y = Math.sin(time * 0.8) * 0.28
+  })
+
+  return (
+    <group
+      ref={groupRef}
+      position={[0.95, -1.25, 0]}
+      rotation={[0, 0, 0]}
+      scale={[0.012, 0.012, 0.012]}
+    >
+      <primitive object={clonedModel} />
+      <pointLight position={[0, 120, 80]} intensity={2.5} color="#00eaff" />
+    </group>
+  )
+}
+
+function NetjerScene() {
+  return (
+    <Canvas
+      camera={{ position: [0, 0, 5], fov: 42 }}
+      gl={{ alpha: true, antialias: true }}
+      shadows
+    >
+      <ambientLight intensity={1.4} />
+      <directionalLight position={[3, 6, 5]} intensity={2.5} />
+      <pointLight position={[0, 2, 3]} intensity={2.5} color="#00eaff" />
+
+      <Suspense fallback={null}>
+        <NetjerAura />
+        <AvatarFBX />
+      </Suspense>
+
+      <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
+    </Canvas>
   )
 }
 
@@ -148,12 +179,7 @@ function App() {
           pointerEvents: 'none'
         }}
       >
-        <Canvas camera={{ position: [0, 0, 4], fov: 45 }}>
-          <ambientLight intensity={1.2} />
-          <directionalLight position={[3, 4, 5]} intensity={2} />
-          <Netjer3D />
-          <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
-        </Canvas>
+        <NetjerScene />
       </div>
 
       <div
@@ -170,7 +196,7 @@ function App() {
           zIndex: 3
         }}
       >
-        NETJER 3D COMPANION
+        NETJER FBX COMPANION
       </div>
 
       {message && (
