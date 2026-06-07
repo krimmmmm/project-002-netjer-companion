@@ -3,19 +3,10 @@ import ReactDOM from "react-dom/client";
 import "./style.css";
 
 import { Canvas, useFrame } from "@react-three/fiber";
-import {
-  OrbitControls,
-  useFBX
-} from "@react-three/drei";
-
+import { OrbitControls, useFBX } from "@react-three/drei";
 import * as THREE from "three";
 
-function EnergyRing({
-  radius,
-  color,
-  speed,
-  y
-}) {
+function EnergyRing({ radius, color, speed, y }) {
   const ringRef = useRef();
 
   useFrame(() => {
@@ -39,24 +30,9 @@ function EnergyRing({
   );
 }
 
-function EyeGlow({ x }) {
-  return (
-    <mesh position={[x, 1.45, 0.55]}>
-      <sphereGeometry args={[0.03, 16, 16]} />
-
-      <meshStandardMaterial
-        color="cyan"
-        emissive="cyan"
-        emissiveIntensity={10}
-      />
-    </mesh>
-  );
-}
-
-function Avatar() {
+function GarudaRex() {
   const group = useRef();
-
-  const fbx = useFBX("/models/avatar.fbx");
+  const fbx = useFBX("/models/garuda.fbx");
 
   useEffect(() => {
     if (!fbx) return;
@@ -64,12 +40,15 @@ function Avatar() {
     fbx.traverse((child) => {
       if (child.isMesh) {
         child.castShadow = true;
+        child.receiveShadow = true;
 
-        child.material = child.material.clone();
-
-        child.material.roughness = 0.3;
-
-        child.material.metalness = 0.15;
+        if (child.material) {
+          child.material = child.material.clone();
+          child.material.side = THREE.DoubleSide;
+          child.material.roughness = 0.28;
+          child.material.metalness = 0.55;
+          child.material.needsUpdate = true;
+        }
       }
     });
   }, [fbx]);
@@ -78,94 +57,50 @@ function Avatar() {
     const t = state.clock.getElapsedTime();
 
     if (group.current) {
-      // ลอยขึ้นลง
-      group.current.position.y =
-        -2.2 + Math.sin(t * 2) * 0.12;
-
-      // หมุนเบาๆ
-      group.current.rotation.y =
-        Math.sin(t * 0.8) * 0.25;
+      group.current.position.y = -2.2 + Math.sin(t * 2) * 0.12;
+      group.current.rotation.y = Math.sin(t * 0.8) * 0.25;
     }
   });
 
   return (
-    <group
-      ref={group}
-      scale={0.022}
-      position={[1, -2.2, 0]}
-    >
+    <group ref={group} scale={0.022} position={[1, -2.2, 0]}>
       <primitive object={fbx} />
-
-      {/* ตาเรืองแสง */}
-      <EyeGlow x={-0.08} />
-      <EyeGlow x={0.08} />
     </group>
   );
 }
 
 function Scene3D() {
   return (
-    <Canvas
-      camera={{
-        position: [0, 0.5, 8],
-        fov: 40
-      }}
-    >
-      {/* LIGHT */}
+    <Canvas camera={{ position: [0, 0.5, 8], fov: 40 }}>
       <ambientLight intensity={2} />
 
-      <directionalLight
-        position={[3, 5, 3]}
-        intensity={5}
-      />
+      <directionalLight position={[3, 5, 3]} intensity={5} />
 
-      <pointLight
-        position={[1, 1, 2]}
-        intensity={8}
-        color="cyan"
-      />
+      <pointLight position={[1, 1, 2]} intensity={8} color="cyan" />
 
-      {/* AURA */}
-      <EnergyRing
-        radius={1.2}
-        color="cyan"
-        speed={0.01}
-        y={-0.1}
-      />
+      <EnergyRing radius={1.2} color="cyan" speed={0.01} y={-0.1} />
 
-      <EnergyRing
-        radius={1.55}
-        color="#ffd166"
-        speed={-0.006}
-        y={-0.1}
-      />
+      <EnergyRing radius={1.55} color="#ffd166" speed={-0.006} y={-0.1} />
 
-      {/* CHARACTER */}
-      <Avatar />
+      <GarudaRex />
 
-      <OrbitControls
-        enableZoom={false}
-        enableRotate={false}
-        enablePan={false}
-      />
+      <OrbitControls enableZoom={false} enableRotate={false} enablePan={false} />
     </Canvas>
   );
 }
 
 function App() {
   const videoRef = useRef();
-
-  const [started, setStarted] =
-    useState(false);
+  const [started, setStarted] = useState(false);
 
   const startCamera = async () => {
     try {
-      const stream =
-        await navigator.mediaDevices.getUserMedia(
-          {
-            video: true
-          }
-        );
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: "user"
+        },
+        audio: false
+      });
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -173,7 +108,8 @@ function App() {
 
       setStarted(true);
     } catch (err) {
-      alert("Camera Error");
+      alert("Camera Error: Please allow camera permission.");
+      console.error(err);
     }
   };
 
@@ -191,31 +127,20 @@ function App() {
         <Scene3D />
       </div>
 
-      <div className="title">
-        NETJER AI COMPANION
-      </div>
+      <div className="title">GARUDA REX COMPANION</div>
 
       {!started && (
-        <button
-          className="startBtn"
-          onClick={startCamera}
-        >
+        <button className="startBtn" onClick={startCamera}>
           START CAMERA
         </button>
       )}
 
-      {started && (
-        <div className="status">
-          NETJER ACTIVE
-        </div>
-      )}
+      {started && <div className="status">GARUDA REX ACTIVE</div>}
     </div>
   );
 }
 
-ReactDOM.createRoot(
-  document.getElementById("root")
-).render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
