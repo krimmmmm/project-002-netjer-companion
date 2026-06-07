@@ -4,13 +4,6 @@
   box-sizing: border-box;
 }
 
-html,
-body,
-#root {
-  width: 100%;
-  height: 100%;
-}
-
 body {
   overflow: hidden;
   background: black;
@@ -22,93 +15,95 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background: black;
 }
 
 .camera {
   position: absolute;
-  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   transform: scaleX(-1);
-  z-index: 1;
 }
 
-.netjerLayer {
+.avatar3d {
   position: absolute;
-  inset: 0;
   width: 100vw;
   height: 100vh;
   z-index: 5;
-  pointer-events: none;
 }
 
 .title {
   position: absolute;
   top: 18px;
-  left: 0;
   width: 100%;
   text-align: center;
+
   color: cyan;
-  font-size: clamp(18px, 4vw, 36px);
+  font-size: 34px;
   font-weight: bold;
+
   letter-spacing: 4px;
+
   z-index: 20;
+
   text-shadow:
-    0 0 8px cyan,
-    0 0 18px cyan,
+    0 0 10px cyan,
+    0 0 20px cyan,
     0 0 40px cyan;
 }
 
 .startBtn {
   position: absolute;
-  bottom: 42px;
+
+  bottom: 40px;
   left: 50%;
+
   transform: translateX(-50%);
-  padding: 18px 38px;
+
+  padding: 20px 40px;
+
   border: none;
   border-radius: 20px;
+
   background: cyan;
   color: black;
-  font-size: clamp(20px, 4vw, 30px);
+
+  font-size: 28px;
   font-weight: bold;
+
   cursor: pointer;
+
   z-index: 50;
+
   box-shadow:
     0 0 20px cyan,
     0 0 50px cyan;
 }
 
-.message {
+.status {
   position: absolute;
-  left: 50%;
-  bottom: 120px;
-  transform: translateX(-50%);
-  width: 88%;
-  max-width: 540px;
-  padding: 12px 16px;
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.75);
-  color: white;
-  text-align: center;
-  font-size: 15px;
-  z-index: 60;
-}
 
-.statusPill {
-  position: absolute;
+  bottom: 20px;
   left: 50%;
-  bottom: 24px;
+
   transform: translateX(-50%);
-  padding: 10px 18px;
+
+  padding: 12px 24px;
+
   border-radius: 999px;
-  background: rgba(0, 255, 255, 0.18);
+
+  background: rgba(0,255,255,0.2);
+
   color: white;
-  font-size: 13px;
+
   font-weight: bold;
+
   letter-spacing: 2px;
-  z-index: 45;
-  border: 1px solid rgba(0, 255, 255, 0.6);
-  box-shadow: 0 0 18px rgba(0, 255, 255, 0.65);
+
+  border: 1px solid cyan;
+
+  z-index: 50;
+
+  box-shadow:
+    0 0 20px cyan;
 }
